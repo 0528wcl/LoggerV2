@@ -1,4 +1,5 @@
 import discord
+from discord import app_commands
 from discord.ext import commands
 from datetime import datetime
 from main import load_channels, save_channels
@@ -10,17 +11,17 @@ class SetChannel(commands.Cog):
         self.GREEN = GREEN
         self.BLUE = BLUE
     
-    @commands.command()
+    @app_commands.command(name = "set_channel", description = "Sets a channel to log in your server")
     @commands.has_permissions(administrator = True)
-    async def set_channel(self, ctx):
-        channel_id = str(ctx.message.channel.id)
-        guild_id = str(ctx.guild.id)
+    async def set_channel(self, interaction: discord.Interaction):
+        channel_id = str(interaction.message.channel.id)
+        guild_id = str(interaction.guild.id)
 
         channels = load_channels()
 
         if guild_id in channels:
             if channels[guild_id] == channel_id:
-                description = f"The channel {ctx.message.channel.mention} is already set for this server."
+                description = f"The channel {interaction.message.channel.mention} is already set for this server."
                 color = self.RED
             else:
                 description = f"There is already a channel set for this server: <#{channels[guild_id]}>"
@@ -28,7 +29,7 @@ class SetChannel(commands.Cog):
         else:
             channels[guild_id] = channel_id
             save_channels(channels)
-            description = f"Successfully set the channel {ctx.message.channel.mention} for this server."
+            description = f"Successfully set the channel {interaction.message.channel.mention} for this server."
             color = self.GREEN
 
         embed = discord.Embed(
@@ -36,10 +37,10 @@ class SetChannel(commands.Cog):
             description = description,
            timestamp = datetime.now()
         )
-        embed.set_author(name = ctx.author.name, icon_url = ctx.author.avatar.url)
-        embed.set_footer(text = self.client.user, icon_url = self.client.user.avatar.url)
+        embed.set_author(name = interaction.user.name, icon_url = interaction.user.display_avatar.url)
+        embed.set_footer(text = self.client.user, icon_url = self.client.user.display_avatar.url)
     
-        await ctx.send(embed = embed)
+        await interaction.response.send_message(embed = embed)
 
 async def setup(client):
     from main import RED, BLUE, GREEN
